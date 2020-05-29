@@ -43,9 +43,9 @@ class SkyEntities extends PluginBase implements Listener{
         @mkdir($this->getDataFolder());
         @mkdir($this->getDataFolder().$this->definitions->getDef('LANG_PATH'));
         @mkdir($this->getDataFolder().$this->definitions->getDef('ENTITIES_PATH'));
-        $this->saveResource('config.yml', false);
-        $this->saveResource("entities.yml", false);
-        $this->saveResource($this->definitions->getDef('LANG_PATH').'/pt_BR.json', false);
+        foreach(array_keys($this->getResources()) as $resource){
+			$this->saveResource($resource, false);
+		}
 
     }
 
@@ -88,7 +88,7 @@ class SkyEntities extends PluginBase implements Listener{
 						if($skinData->issetSkin()){
 							$entity = $this->spawnEntity($sender, $entityName, $skin);
 	                        if($entity !== false){
-	                            $sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFUL_CREATED'));
+	                            $sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFULLY_CREATED'));
 
 	                            if($sender->getLevel()->save()){
 	                                $this->getLogger()->info("§a".$this->translator->get('WORLD_SAVED_AFTER_ENTITY_CREATION', ["§6".$sender->getLevel()->getName()."§a"]));
@@ -120,7 +120,7 @@ class SkyEntities extends PluginBase implements Listener{
 								if($entity !== false){
 
 									if($this->removeEntity($entity)){
-										$sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFUL_REMOVED'));
+										$sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFULLY_REMOVED'));
 									}else{
 										$sender->sendMessage("§c".$this->translator->get('CANT_REMOVE_ENTITY'));
 									}
@@ -159,7 +159,7 @@ class SkyEntities extends PluginBase implements Listener{
                         		if($entity instanceof Entity){
 
                         			if($this->setEntityScale($entity, $scale)){
-                        				$sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFUL_SCALED'));
+                        				$sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFULLY_SCALED'));
                         			}else{
                         				$sender->sendMessage("§c".$this->translator->get('ENTITY_SCALING_ERROR'));
                         			}
@@ -196,7 +196,7 @@ class SkyEntities extends PluginBase implements Listener{
 		                        if($entity instanceof Entity){
 
 		                        	$this->setEntityRotation($sender, $entity, $angle);
-		                        	$sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFUL_ROTATED'));
+		                        	$sender->sendMessage("§a".$this->translator->get('ENTITY_SUCCESSFULLY_ROTATED'));
 
 		                        }else{
 		                        	$sender->sendMessage("§c".$this->translator->get('ENTITY_NOT_FOUND'));
@@ -281,6 +281,43 @@ class SkyEntities extends PluginBase implements Listener{
 						}else{
 							$sender->sendMessage("§c".$this->translator->get('ENTITY_NOT_FOUND'));
 						}
+						break;
+
+					case 'setskin':
+						if(!isset($args[1]) || !isset($args[2])){
+                            $sender->sendMessage("§c".$this->translator->get('CMD_SETSKIN_USAGE'));
+                            return true;
+                        }
+
+                        $entityName = $args[1];
+                        $entityData = $this->entities->get($entityName);
+
+                        $skinName = $args[2];
+
+						if($entityData){
+
+                        	if($sender->getLevel()->getName() == $entityData['level']){
+
+	                        	$entity = $this->getEntityByName($sender, $entityName);
+
+	                        	$skin = new SkinData($this, $skinName);
+	                        	if($skin->issetSkin()){
+
+	                        		$this->setEntitySkin($entity, $skin);
+	                        		$sender->sendMessage("§a".$this->translator->get('ENTITY_SKIN_SUCCESSFULLY_SET'));
+
+	                        	}else{
+	                        		$sender->sendMessage("§c".$this->translator->get('SKIN_NOT_FOUND'));
+	                        	}
+
+	                        }else{
+	                        	$sender->sendMessage("§c".$this->translator->get('CANT_CMD_OUTSIDE_LEVEL', ["§6".$entityData['level']."§c"]));
+	                        }
+
+	                    }else{
+	                    	$sender->sendMessage("§c".$this->translator->get('ENTITY_NOT_FOUND'));
+	                    }
+
 						break;
 
                     case 'inspect':
@@ -483,6 +520,18 @@ class SkyEntities extends PluginBase implements Listener{
     		return false;
     	}
 
+    }
+
+    public function setEntitySkin(Entity $entity, SkinData $skin){
+    	$skinName = $skin->getName();
+    	$bytes = $skin->getBytes();
+        $geometryId = $skin->getGeometryId();
+        $geometry = $skin->getGeometry();
+
+        $newSkin = new Skin($skinName, $bytes, "", $geometryId, $geometry);
+        $entity->setSkin($newSkin);
+        $entity->sendSkin();
+        $entity->namedtag->setTag(new StringTag("EntitySkin", $skinName));
     }
 
 	/** 

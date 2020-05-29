@@ -111,12 +111,27 @@ class SkinData{
         
 	}
 
+	/** 
+    * Search skin files and return true if they exists
+    * @access public
+    * @param String $skin
+    * @return Bool
+    */
 	public function issetSkin($skin=NULL){
 		$skin = $skin ?? $this->skin;
 		$skinPath = $this->definitions->getEntitiesPath($skin.'.png');
 		$geometryPath = $this->definitions->getEntitiesPath($skin.'.json');
 
 		return (file_exists($skinPath) && file_exists($geometryPath));
+	}
+
+	/** 
+    * Retrieve skin name
+    * @access public
+    * @return String
+    */
+	public function getName(){
+		return $this->skin;
 	}
 
 

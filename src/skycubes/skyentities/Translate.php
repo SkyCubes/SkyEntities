@@ -23,7 +23,7 @@ class Translate{
 			$this->lang = json_decode( file_get_contents($definitions->getLangPath($this->language)) );
 
 		}else{
-			throw new Exception('Translation file \''.$this->language.'.yml\' not found.');
+			throw new Exception('Translation file \''.$this->language.'.json\' not found.');
 		}
 
 	}
